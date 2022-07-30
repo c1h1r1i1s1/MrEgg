@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "name": "Christian's C++ build and compile",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/${fileBasenameNoExtension}",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "preLaunchTask": "Full Compile"
+        }
+    ],
+    "version": "2.0.0"
+}

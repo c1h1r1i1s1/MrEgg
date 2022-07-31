@@ -21,6 +21,8 @@ class gameObject {
         float startX;
         float startY;
         float offset;
+        float scale;
+        float boxScale;
     
     public:
         bool active;
@@ -28,12 +30,14 @@ class gameObject {
         bool textured;
         bool moving;
         bool finisher;
+        bool landing;
+        bool finished;
         sf::Vector2f getLocation();
         sf::Vector2f getSpeed();
         sf::FloatRect getBounds();
         HitBoxSprite getSprite();
         
-        gameObject(std::string& textureFile, bool active, float xPos, float yPos, sf::FloatRect hitBox, float rotation, int animationCycle, bool sharp, bool textured, bool moving, int moveType, float offset, bool finisher);
+        gameObject(std::string& textureFile, bool active, float xPos, float yPos, sf::FloatRect hitBox, float rotation, int animationCycle, bool sharp, bool textured, bool moving, int moveType, float offset, bool finisher, float boxScale, float scale);
         void setLocation(float startX, float startY);
         void loadTexture(std::string& textureFile);
         void loadSprite(float xPos, float yPos);

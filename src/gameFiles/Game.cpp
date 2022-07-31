@@ -7,7 +7,7 @@ Game::Game() {
 }
 
 Game::~Game() {
-    delete this-> window;
+    delete this->window;
 }
 
 void Game::loadMenu() {
@@ -22,8 +22,9 @@ void Game::initVariables() {
     this->oldTime = this->clock.getElapsedTime();
     this->frameCounter = oldTime;
     this->levelObjects = new std::vector<gameObject>;
-    this->levelWon = false;
     this->pMenu.init(this->windowView->getSize().x, this->windowView->getSize().y);
+    this->finishTimer = -1;
+    this->finishSwitch = false;
 }
 
 void Game::initWindow() {
@@ -37,7 +38,7 @@ void Game::initWindow() {
 
 void Game::initPlayer() {
     this->player = Player();
-    this->player.setLocation(500.f, 500.f);
+    this->player.setLocation(7000.f, 200.f);
 }
 
 void Game::loadLevel(int levelNum) {
@@ -79,6 +80,8 @@ void Game::loadLevel(int levelNum) {
     int moveType;
     float moveOffset;
     bool finisher;
+    float boxScale;
+    float scale;
 
     int lineCounter = 0; // out of 14
     std::string segment = "";
@@ -124,7 +127,7 @@ void Game::loadLevel(int levelNum) {
                             rotation = std::stof(segment);
                             break;
                         case 9:
-                            rotation = std::stoi(segment);
+                            animationCycle = std::stoi(segment);
                             break;
                         case 10:
                             if (segment.compare("true") == 0) {
@@ -160,6 +163,12 @@ void Game::loadLevel(int levelNum) {
                                 finisher = false;
                             }
                             break;
+                        case 16:
+                            boxScale = std::stof(segment);
+                            break;
+                        case 17:
+                            scale = std::stof(segment);
+                            break;
                     }
                     segment = "";
                     lineCounter++;
@@ -167,7 +176,7 @@ void Game::loadLevel(int levelNum) {
                     segment += ch;
                 }
             }
-            this->levelObjects->push_back(gameObject(textureFile, active, xPos, yPos, *hitBox, rotation, animationCycle, sharp, textured, moving, moveType, moveOffset, finisher));
+            this->levelObjects->push_back(gameObject(textureFile, active, xPos, yPos, *hitBox, rotation, animationCycle, sharp, textured, moving, moveType, moveOffset, finisher, boxScale, scale));
         }
     }
 
@@ -192,10 +201,10 @@ void Game::loadLevel(int levelNum) {
 
     // Create bounding boxes
     std::string thing = "";
-    this->levelObjects->push_back(gameObject(thing, false, -50, -50, sf::FloatRect(0, 0, 50, this->levelRect->height + 100), 0, 0, false, false, false, 0, 0, false));
-    this->levelObjects->push_back(gameObject(thing, false, 0, -50, sf::FloatRect(0, 0, this->levelRect->width, 50), 0, 0, false, false, false, 0, 0, false));
-    this->levelObjects->push_back(gameObject(thing, false, this->levelRect->width, -50, sf::FloatRect(0, 0, 50, this->levelRect->height + 100), 0, 0, false, false, false, 0, 0, false));
-    this->levelObjects->push_back(gameObject(thing, false, 0, this->levelRect->height, sf::FloatRect(0, 0, this->levelRect->width, 50), 0, 0, false, false, false, 0, 0, false));
+    this->levelObjects->push_back(gameObject(thing, false, -50, -50, sf::FloatRect(0, 0, 50, this->levelRect->height + 100), 0, 0, false, false, false, 0, 0, false, 1, 1));
+    this->levelObjects->push_back(gameObject(thing, false, 0, -50, sf::FloatRect(0, 0, this->levelRect->width, 50), 0, 0, false, false, false, 0, 0, false, 1, 1));
+    this->levelObjects->push_back(gameObject(thing, false, this->levelRect->width, -50, sf::FloatRect(0, 0, 50, this->levelRect->height + 100), 0, 0, false, false, false, 0, 0, false, 1, 1));
+    this->levelObjects->push_back(gameObject(thing, false, 0, this->levelRect->height, sf::FloatRect(0, 0, this->levelRect->width, 50), 0, 0, false, false, false, 0, 0, false, 1, 1));
     
     // Load Tileset
     if (!this->map.load("src/Images/main tiles practice.png", sf::Vector2u(64, 64), levelOld, (width/64)/scaleFactor, (height/64)/scaleFactor, 2)) {
@@ -307,7 +316,7 @@ void Game::pollEvent() {
 
 void Game::update() {
     this->pollEvent();
-    if (this->currentState == inGame) {
+    if (this->currentState == inGame || this->currentState == won) {
         //Tick movements
         this->elapsed = this->clock.getElapsedTime();
         this->timeChangeMilli = (elapsed.asMilliseconds() - oldTime.asMilliseconds())/1000.f;
@@ -320,6 +329,11 @@ void Game::update() {
         float frameDifference = this->elapsed.asMilliseconds() - this->frameCounter.asMilliseconds();
         if (frameDifference > 70) {
             this->player.updateTexture();
+            for (int i=0; i<this->objCount; i++) {
+                if (this->levelObjects->at(i).active) {
+                    this->levelObjects->at(i).updateTexture();
+                }
+            }
             this->frameCounter = this->elapsed;
             // Also update other sprites
         }
@@ -341,7 +355,9 @@ void Game::update() {
                         }
                     }
                 } else if (this->levelObjects->at(i).finisher) {
-                    this->levelWon = true;
+                    this->levelObjects->at(i).landing = true;
+                    this->currentState = won;
+                    this->finishTimer = this->clock.getElapsedTime().asMilliseconds();
                 } else {
                     // From perspective of player, take minimum of overlaps 
                     float overlapL = tempObjBox.left + tempObjBox.width - tempPlayerBox.left;
@@ -410,11 +426,16 @@ void Game::update() {
         }
         this->window->setView(*this->windowView);
 
-        if (this->levelWon) {
-            this->windowView->setCenter(this->windowView->getSize().x/2, this->windowView->getSize().y/2);
-            this->window->setView(*this->windowView);
-            this->currentState = inMenu;
-            this->levelWon = false;
+        if (this->currentState == won) {
+            float timeDiff = this->clock.getElapsedTime().asMilliseconds() - this->finishTimer;
+            if (timeDiff >= 2) {
+                //trigger endgame message
+            } else if (timeDiff >= 0) {
+                //don't worry about player
+            }
+            // this->windowView->setCenter(this->windowView->getSize().x/2, this->windowView->getSize().y/2);
+            // this->window->setView(*this->windowView);
+            // this->currentState = inMenu;
         }
     } else if (this->currentState == inMenu) {
         if (menu.update()) {
@@ -448,6 +469,20 @@ void Game::render() {
     } else if (this->currentState == paused) {
         this->window->draw(this->pauseSprite);
         this->pMenu.draw(this->window);
+    } else if (this->currentState == won) {
+        if (!(this->finishSwitch)) {
+            for (int i=0; i<this->objCount; i++) {
+                if (this->levelObjects->at(i).finisher) {
+                    this->levelObjects->at(i).updateTexture();
+                }
+            }
+            this->finishSwitch = true;
+            this->window->draw(this->player.getSprite());
+        }
+        this->window->draw(this->map);
+        for (int i=0; i<this->objCount; i++) {
+            this->window->draw(this->levelObjects->at(i).getSprite());
+        }
     }
 
     this->window->display();
@@ -455,5 +490,6 @@ void Game::render() {
 
 void Game::restartLevel() {
     this->player.reset();
-    this->player.setLocation(100, 100);
+    this->player.setLocation(7000, 200);
+    this->finishTimer = -1;
 }

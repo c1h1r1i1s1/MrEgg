@@ -2,31 +2,31 @@
 8192|2432
 29
 // Standard objects Format: textureFile, bool active, float xPos, float yPos, sf::FloatRect hitBox (left, top, width, height), float rotation, int animationCycle, bool sharp, bool textured, bool moving, int moveType
-src/Images/Knife.png|false|2000|1672|0|0|192|112|0|0|true|true|true|1|0|false|
-src/Images/carrot.png|false|300|2000|0|0|384|64|0|0|false|true|false|0|0|false|
-src/Images/carrot.png|false|1000|1600|0|0|384|64|0|0|false|true|true|1|0|false|
-src/Images/Spikes.png|false|768|2240|10|0|364|64|0|0|true|true|false|0|0|false|
-src/Images/Spikes.png|false|1152|2240|10|0|364|64|0|0|true|true|false|0|0|false|
-src/Images/Spikes.png|false|1536|2240|10|0|364|64|0|0|true|true|false|0|0|false|
-src/Images/Spikes.png|false|1920|2240|10|0|364|64|0|0|true|true|false|0|0|false|
-nothing|false|0|0|0|0|128|2432|0|0|false|false|false|0|0|false|
-nothing|false|128|0|0|0|7936|128|0|0|false|false|false|0|0|false|
-nothing|false|8064|0|0|0|128|2432|0|0|false|false|false|0|0|false|
-nothing|false|128|2304|0|0|7936|128|0|0|false|false|false|0|0|false|
-nothing|false|640|1536|0|0|128|768|0|0|false|false|false|0|0|false|
-src/Images/Knife.png|false|2600|1672|0|0|192|112|0|0|true|true|true|1|0|false|
-src/Images/carrot.png|false|3700|1600|0|0|384|64|0|0|false|true|true|1|0|false|
-src/Images/Spikes.png|false|2560|2240|10|0|364|64|0|0|true|true|false|0|0|false|
-src/Images/Spikes.png|false|2944|2240|10|0|364|64|0|0|true|true|false|0|0|false|
-src/Images/Spikes.png|false|3328|2240|10|0|364|64|0|0|true|true|false|0|0|false|
-src/Images/Spikes.png|false|3712|2240|10|0|364|64|0|0|true|true|false|0|0|false|
-nothing|false|4204|1536|0|0|128|768|0|0|false|false|false|0|0|false|
-src/Images/Knife.png|false|4500|1672|0|0|192|112|0|0|true|true|true|1|0|false|
-src/Images/Knife.png|false|5000|1672|0|0|192|112|0|0|true|true|true|1|0.2|false|
-src/Images/Knife.png|false|5500|1672|0|0|192|112|0|0|true|true|true|1|0.3|false|
-src/Images/Knife.png|false|6000|1672|0|0|192|112|0|0|true|true|true|1|0.4|false|
-src/Images/Knife.png|false|6500|1672|0|0|192|112|0|0|true|true|true|1|0.5|false|
-src/Images/pan.png|false|7500|2240|0|10|300|64|0|0|false|true|false|0|0|true|
+src/Images/Knife.png|false|2000|1672|0|0|192|112|0|0|true|true|true|1|0|false|1|1|
+src/Images/carrot.png|false|300|2000|0|0|384|64|0|0|false|true|false|0|0|false|1|1|
+src/Images/carrot.png|false|1000|1600|0|0|384|64|0|0|false|true|true|1|0|false|1|1|
+src/Images/Spikes.png|false|768|2240|10|0|364|64|0|0|true|true|false|0|0|false|1|1|
+src/Images/Spikes.png|false|1152|2240|10|0|364|64|0|0|true|true|false|0|0|false|1|1|
+src/Images/Spikes.png|false|1536|2240|10|0|364|64|0|0|true|true|false|0|0|false|1|1|
+src/Images/Spikes.png|false|1920|2240|10|0|364|64|0|0|true|true|false|0|0|false|1|1|
+nothing|false|0|0|0|0|128|2432|0|0|false|false|false|0|0|false|1|1|
+nothing|false|128|0|0|0|7936|128|0|0|false|false|false|0|0|false|1|1|
+nothing|false|8064|0|0|0|128|2432|0|0|false|false|false|0|0|false|1|1|
+nothing|false|128|2304|0|0|7936|128|0|0|false|false|false|0|0|false|1|1|
+nothing|false|640|1536|0|0|128|768|0|0|false|false|false|0|0|false|1|1|
+src/Images/Knife.png|false|2600|1672|0|0|192|112|0|0|true|true|true|1|0|false|1|1|
+src/Images/carrot.png|false|3700|1600|0|0|384|64|0|0|false|true|true|1|0|false|1|1|
+src/Images/Spikes.png|false|2560|2240|10|0|364|64|0|0|true|true|false|0|0|false|1|1|
+src/Images/Spikes.png|false|2944|2240|10|0|364|64|0|0|true|true|false|0|0|false|1|1|
+src/Images/Spikes.png|false|3328|2240|10|0|364|64|0|0|true|true|false|0|0|false|1|1|
+src/Images/Spikes.png|false|3712|2240|10|0|364|64|0|0|true|true|false|0|0|false|1|1|
+nothing|false|4204|1536|0|0|128|768|0|0|false|false|false|0|0|false|1|1|
+src/Images/Knife.png|false|4500|1672|0|0|192|112|0|0|true|true|true|1|0|false|1|1|
+src/Images/Knife.png|false|5000|1672|0|0|192|112|0|0|true|true|true|1|0.2|false|1|1|
+src/Images/Knife.png|false|5500|1672|0|0|192|112|0|0|true|true|true|1|0.3|false|1|1|
+src/Images/Knife.png|false|6000|1672|0|0|192|112|0|0|true|true|true|1|0.4|false|1|1|
+src/Images/Knife.png|false|6500|1672|0|0|192|112|0|0|true|true|true|1|0.5|false|1|1|
+src/Images/Pan animations.png|true|7500|2000|21|64|82|31|0|8|false|true|false|0|0|true|2|3|
 // first, there's the scale facter (e.g if 64x64 image and we want it to cover 128x128). Then everything
 2
 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,

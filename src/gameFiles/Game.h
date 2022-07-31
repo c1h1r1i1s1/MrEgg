@@ -22,7 +22,6 @@ class Game {
         float xScreenRatio;
         float yScreenRatio;
         tileMap map;
-        bool levelWon;
         enum gameState { inMenu, inGame, won, paused };
         gameState currentState;
         Menu menu;
@@ -50,6 +49,9 @@ class Game {
         sf::Time oldTime;
         sf::Time frameCounter;
         float timeChangeMilli;
+        
+        float finishTimer;
+        bool finishSwitch;
 
         void initVariables();
         void initWindow();

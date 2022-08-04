@@ -337,6 +337,10 @@ bool Player::damage(int damageAmount) {
 
 void Player::reset() {
     this->health = 100;
+    this->movingDown = false;
+    this->movingLeft = false;
+    this->movingRight = false;
+    this->movingUp = false;
 }
 
 HitBoxSprite Player::getSprite() {

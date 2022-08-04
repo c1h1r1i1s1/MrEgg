@@ -7,6 +7,7 @@
 #include "tileMap.h"
 #include "Menu.h"
 #include "pauseMenu.h"
+#include "finishMenu.h"
 
 class Game {
     private:
@@ -16,7 +17,6 @@ class Game {
         sf::View* windowView;
         sf::FloatRect* levelRect;
         sf::Event event;
-        //bool paused;
         Player player;
         bool levelInit;
         float xScreenRatio;
@@ -26,6 +26,7 @@ class Game {
         gameState currentState;
         Menu menu;
         pauseMenu pMenu;
+        finishMenu fMenu;
 
         // Textures
         sf::Texture eggTexture;

@@ -13,6 +13,9 @@ Game::~Game() {
 void Game::loadMenu() {
     this->currentState = inMenu;
     this->menu.init(this->windowView->getSize().x, this->windowView->getSize().y);
+    // Init menus
+    this->pMenu.init(this->windowView->getSize().x, this->windowView->getSize().y);
+    this->fMenu.init(this->windowView->getSize().x, this->windowView->getSize().y);
 }
 
 void Game::initVariables() {
@@ -22,7 +25,6 @@ void Game::initVariables() {
     this->oldTime = this->clock.getElapsedTime();
     this->frameCounter = oldTime;
     this->levelObjects = new std::vector<gameObject>;
-    this->pMenu.init(this->windowView->getSize().x, this->windowView->getSize().y);
     this->finishTimer = -1;
     this->finishSwitch = false;
 }
@@ -45,6 +47,7 @@ void Game::loadLevel(int levelNum) {
     if (!this->levelObjects->empty()) {
         this->levelObjects->clear();
     }
+    this->finishTimer = 0;
 
     std::ifstream levelDataFile("src/levelData/level_" + std::to_string(levelNum) + ".data");
     std::string lineText;
@@ -310,6 +313,18 @@ void Game::pollEvent() {
                     this->pMenu.escape();
                 }
             }
+        } else if (this->currentState == won) {
+            if (event.type == sf::Event::KeyPressed) {
+                if (this->event.key.code == sf::Keyboard::W) {
+                    this->fMenu.moveUp();
+                } else if (this->event.key.code == sf::Keyboard::S) {
+                    this->fMenu.moveDown();
+                } else if (this->event.key.code == sf::Keyboard::Enter) {
+                    this->fMenu.select();
+                } else if (this->event.key.code == sf::Keyboard::Escape) {
+                    this->fMenu.escape();
+                }
+            }
         }
     }
 }
@@ -320,7 +335,9 @@ void Game::update() {
         //Tick movements
         this->elapsed = this->clock.getElapsedTime();
         this->timeChangeMilli = (elapsed.asMilliseconds() - oldTime.asMilliseconds())/1000.f;
-        this->player.calcMovement(timeChangeMilli);
+        if (this->currentState == inGame) {
+            this->player.calcMovement(timeChangeMilli);
+        }
         for (int i=0; i<this->objCount; i++) {
             this->levelObjects->at(i).calcMovement(this->elapsed.asSeconds());
         }
@@ -356,8 +373,10 @@ void Game::update() {
                     }
                 } else if (this->levelObjects->at(i).finisher) {
                     this->levelObjects->at(i).landing = true;
-                    this->currentState = won;
-                    this->finishTimer = this->clock.getElapsedTime().asMilliseconds();
+                    if (this->currentState != won) {
+                        this->currentState = won;
+                        this->finishTimer = this->clock.getElapsedTime().asMilliseconds();
+                    }
                 } else {
                     // From perspective of player, take minimum of overlaps 
                     float overlapL = tempObjBox.left + tempObjBox.width - tempPlayerBox.left;
@@ -425,26 +444,31 @@ void Game::update() {
             this->windowView->setCenter(this->windowView->getCenter().x,this->levelRect->height - this->windowView->getSize().y/2);
         }
         this->window->setView(*this->windowView);
-
+        
+        float timeDiff = this->clock.getElapsedTime().asMilliseconds() - this->finishTimer;
         if (this->currentState == won) {
-            float timeDiff = this->clock.getElapsedTime().asMilliseconds() - this->finishTimer;
-            if (timeDiff >= 2) {
-                //trigger endgame message
-            } else if (timeDiff >= 0) {
-                //don't worry about player
+            if (timeDiff >= 1000) {
+                int ret = this->fMenu.update(this->windowView->getCenter(), this->windowView->getSize().y);
+                if (ret == 1) {
+                    this->currentState = inGame;
+                    this->loadLevel(1);
+                    this->restartLevel();
+                } else if (ret == 2) {
+                    this->windowView->setCenter(this->windowView->getSize().x/2, this->windowView->getSize().y/2);
+                    this->window->setView(*this->windowView);
+                    this->currentState = inMenu;
             }
-            // this->windowView->setCenter(this->windowView->getSize().x/2, this->windowView->getSize().y/2);
-            // this->window->setView(*this->windowView);
-            // this->currentState = inMenu;
         }
+        }
+
     } else if (this->currentState == inMenu) {
-        if (menu.update()) {
+        if (this->menu.update()) {
             this->currentState = inGame;
             this->initPlayer();
             this->loadObjects();
         }
     } else if (this->currentState == paused) {
-        int ret = pMenu.update(this->windowView->getCenter(), this->windowView->getSize().y);
+        int ret = this->pMenu.update(this->windowView->getCenter(), this->windowView->getSize().y);
         if (ret == 1) {
             this->currentState = inGame;
         } else if (ret == 2) {
@@ -483,6 +507,7 @@ void Game::render() {
         for (int i=0; i<this->objCount; i++) {
             this->window->draw(this->levelObjects->at(i).getSprite());
         }
+        this->fMenu.draw(this->window);
     }
 
     this->window->display();

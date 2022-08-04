@@ -8,6 +8,8 @@
 #include "Menu.h"
 #include "pauseMenu.h"
 #include "finishMenu.h"
+#include <SFML/Audio.hpp>
+#include "Sound2.h"
 
 class Game {
     private:
@@ -50,6 +52,14 @@ class Game {
         sf::Time oldTime;
         sf::Time frameCounter;
         float timeChangeMilli;
+
+        // Sounds
+        sf::SoundBuffer frySoundBuffer;
+        sf::SoundBuffer fryLoopSoundBuffer;
+        Sound2 frySound;
+        Sound2 fryLoopSound;
+        sf::Music inGameMusic;
+        std::vector<Sound2*> soundList;
         
         float finishTimer;
         bool finishSwitch;
@@ -58,6 +68,8 @@ class Game {
         void initWindow();
         void restartLevel();
         void loadLevel(int levelNum);
+        void stateSwitch(int switchType);
+        void updateSounds();
     
     public:
         Game();

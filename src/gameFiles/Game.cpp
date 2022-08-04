@@ -27,6 +27,28 @@ void Game::initVariables() {
     this->levelObjects = new std::vector<gameObject>;
     this->finishTimer = -1;
     this->finishSwitch = false;
+
+    // Sound
+    if (!this->frySoundBuffer.loadFromFile("src/audio/Frying.wav")) {
+        std::cout << "Cannot load frying audio" << std::endl;
+    }
+    this->frySound.setBuffer(this->frySoundBuffer);
+    this->frySound.setVolume(50);
+    this->frySound.setID(0);
+
+    if (!this->fryLoopSoundBuffer.loadFromFile("src/audio/FryingLoop.wav")) {
+        std::cout << "Cannot load frying loop audio" << std::endl;
+    }
+    this->fryLoopSound.setBuffer(this->fryLoopSoundBuffer);
+    this->fryLoopSound.setVolume(10);
+    this->fryLoopSound.setLoop(true);
+    this->fryLoopSound.setID(1);
+
+    if (!this->inGameMusic.openFromFile("src/audio/Main Theme.wav")) {
+        std::cout << "Cannot load main theme music" << std::endl;
+    }
+    this->inGameMusic.setVolume(50);
+    this->inGameMusic.setLoop(true);
 }
 
 void Game::initWindow() {
@@ -40,7 +62,6 @@ void Game::initWindow() {
 
 void Game::initPlayer() {
     this->player = Player();
-    this->player.setLocation(7000.f, 200.f);
 }
 
 void Game::loadLevel(int levelNum) {
@@ -62,6 +83,12 @@ void Game::loadLevel(int levelNum) {
     
     getline(levelDataFile, lineText);
     this->objCount = std::stoi(lineText);
+
+    getline(levelDataFile, lineText);
+    int x = std::stoi(lineText);
+
+    getline(levelDataFile, lineText);
+    this->player.setLocation(x, std::stoi(lineText));
 
     getline(levelDataFile, lineText); // Skipping header
 
@@ -242,6 +269,7 @@ void Game::pollEvent() {
                 this->pauseSprite.setPosition(this->windowView->getCenter().x, this->windowView->getCenter().y);
                 this->pauseSprite.setScale(this->xScreenRatio, this->yScreenRatio);
                 this->currentState = paused;
+                this->stateSwitch(2);
                 this->pMenu.restart();
             }
         } else if (event.type == sf::Event::Resized) {
@@ -276,6 +304,7 @@ void Game::pollEvent() {
                     this->pauseSprite.setPosition(this->windowView->getCenter().x, this->windowView->getCenter().y);
                     this->pauseSprite.setScale(this->xScreenRatio, this->yScreenRatio);
                     this->currentState = paused;
+                    this->stateSwitch(2);
                     this->pMenu.restart();
                 }
             } else if (this->event.type == sf::Event::KeyReleased) {
@@ -321,8 +350,6 @@ void Game::pollEvent() {
                     this->fMenu.moveDown();
                 } else if (this->event.key.code == sf::Keyboard::Enter) {
                     this->fMenu.select();
-                } else if (this->event.key.code == sf::Keyboard::Escape) {
-                    this->fMenu.escape();
                 }
             }
         }
@@ -375,6 +402,7 @@ void Game::update() {
                     this->levelObjects->at(i).landing = true;
                     if (this->currentState != won) {
                         this->currentState = won;
+                        this->stateSwitch(0);
                         this->finishTimer = this->clock.getElapsedTime().asMilliseconds();
                     }
                 } else {
@@ -451,12 +479,14 @@ void Game::update() {
                 int ret = this->fMenu.update(this->windowView->getCenter(), this->windowView->getSize().y);
                 if (ret == 1) {
                     this->currentState = inGame;
+                    this->stateSwitch(0);
                     this->loadLevel(1);
                     this->restartLevel();
                 } else if (ret == 2) {
                     this->windowView->setCenter(this->windowView->getSize().x/2, this->windowView->getSize().y/2);
                     this->window->setView(*this->windowView);
                     this->currentState = inMenu;
+                    this->stateSwitch(0);
             }
         }
         }
@@ -464,6 +494,7 @@ void Game::update() {
     } else if (this->currentState == inMenu) {
         if (this->menu.update()) {
             this->currentState = inGame;
+            this->stateSwitch(0);
             this->initPlayer();
             this->loadObjects();
         }
@@ -471,10 +502,38 @@ void Game::update() {
         int ret = this->pMenu.update(this->windowView->getCenter(), this->windowView->getSize().y);
         if (ret == 1) {
             this->currentState = inGame;
+            this->stateSwitch(1);
         } else if (ret == 2) {
             this->windowView->setCenter(this->windowView->getSize().x/2, this->windowView->getSize().y/2);
             this->window->setView(*this->windowView);
             this->currentState = inMenu;
+            this->stateSwitch(0);
+        }
+    }
+    if (this->soundList.size() > 0) {
+        this->updateSounds();
+    }
+}
+
+void Game::updateSounds() {
+    int i=-1;
+    int removeSize = this->soundList.size();
+    int removeList[removeSize];
+    for (Sound2 *sound : this->soundList) {
+        i++;
+        if (sound->getStatus() == sf::SoundSource::Status::Stopped) {
+            if (sound->getID() == 0) {
+                if (this->currentState == won) {
+                    this->fryLoopSound.play();
+                    this->soundList.push_back(&this->fryLoopSound);
+                }
+            }
+            removeList[i] = 1;
+        }
+    }
+    for (int y=removeSize-1; y>=0; y--) {
+        if (removeList[y] == 1) {
+            this->soundList.erase(this->soundList.begin() + y);
         }
     }
 }
@@ -511,6 +570,41 @@ void Game::render() {
     }
 
     this->window->display();
+}
+
+void Game::stateSwitch(int switchType) {
+    if (switchType == 0) { // Full screen switch
+        if (this->soundList.size() > 0) {
+            for (Sound2 *sound : this->soundList) {
+                sound->stop();
+            }
+        }
+        if (this->currentState == inMenu) {
+            this->inGameMusic.stop();
+            // play menu music
+        } else if (this->currentState == inGame) {
+            this->inGameMusic.play();
+        } else if (this->currentState == won) {
+            this->frySound.play();
+            this->soundList.push_back(&this->frySound);
+        }
+    } else if (switchType == 1) { // Resuming from pause
+        //this->pauseMusic.stop();
+        if (this->soundList.size() > 0) {
+            for (Sound2 *sound : this->soundList) {
+                sound->play();
+            }
+        }
+        this->inGameMusic.play();
+    } else if (switchType == 2) { // Starting pause
+        if (this->soundList.size() > 0) {
+            for (Sound2 *sound : this->soundList) {
+                sound->pause();
+            }
+        }
+        this->inGameMusic.pause();
+        //this->pauseMusic.play();
+    }
 }
 
 void Game::restartLevel() {

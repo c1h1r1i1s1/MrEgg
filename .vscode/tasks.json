@@ -3,7 +3,7 @@
         {
             "type": "shell",
             "label": "Full Compile",
-            "command": "/usr/bin/g++ -c ${workspaceFolder}/src/gameFiles/*.cpp --std=c++11 && /usr/bin/g++ -o ${fileBasenameNoExtension} *.o -lsfml-graphics -lsfml-window -lsfml-system && rm *.o",
+            "command": "/usr/bin/g++ -c ${workspaceFolder}/src/gameFiles/*.cpp --std=c++11 && /usr/bin/g++ -o ${fileBasenameNoExtension} *.o -lsfml-graphics -lsfml-audio -lsfml-window -lsfml-system && rm *.o",
             "options": {
                 "cwd": "${workspaceFolder}"
             },

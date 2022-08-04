@@ -1,6 +1,8 @@
-// Level data: dimensions, objCount (add 4 for bounding boxes)
+// Level data: dimensions, objCount (add 4 for bounding boxes), player start location x then y
 8192|2432
 29
+200
+2000
 // Standard objects Format: textureFile, bool active, float xPos, float yPos, sf::FloatRect hitBox (left, top, width, height), float rotation, int animationCycle, bool sharp, bool textured, bool moving, int moveType
 src/Images/Knife.png|false|2000|1672|0|0|192|112|0|0|true|true|true|1|0|false|1|1|
 src/Images/carrot.png|false|300|2000|0|0|384|64|0|0|false|true|false|0|0|false|1|1|

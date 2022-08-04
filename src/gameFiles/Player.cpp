@@ -72,7 +72,7 @@ void Player::loadSprite() {
     this->eggSprite.setHitbox(sf::FloatRect(8.f, 0, 48.f, 64.f));
     this->eggSprite.setOrigin(sf::Vector2f(32.f, 32.f));
     this->eggSprite.setScale(sf::Vector2f(3.f, 3.f));
-    this->eggSprite.setPosition(sf::Vector2f(7000.f, 200.f));
+    this->eggSprite.setPosition(sf::Vector2f(200.f, 200.f)); // as a default
 }
 
 void Player::calcMovement(float timeChangeMilli) {

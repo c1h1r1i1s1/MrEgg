@@ -7,12 +7,15 @@ Game::Game() {
 }
 
 Game::~Game() {
-    delete this-> window;
+    delete this->window;
 }
 
 void Game::loadMenu() {
     this->currentState = inMenu;
     this->menu.init(this->windowView->getSize().x, this->windowView->getSize().y);
+    // Init menus
+    this->pMenu.init(this->windowView->getSize().x, this->windowView->getSize().y);
+    this->fMenu.init(this->windowView->getSize().x, this->windowView->getSize().y);
 }
 
 void Game::initVariables() {
@@ -22,8 +25,30 @@ void Game::initVariables() {
     this->oldTime = this->clock.getElapsedTime();
     this->frameCounter = oldTime;
     this->levelObjects = new std::vector<gameObject>;
-    this->levelWon = false;
-    this->pMenu.init(this->windowView->getSize().x, this->windowView->getSize().y);
+    this->finishTimer = -1;
+    this->finishSwitch = false;
+
+    // Sound
+    if (!this->frySoundBuffer.loadFromFile("src/audio/Frying.wav")) {
+        std::cout << "Cannot load frying audio" << std::endl;
+    }
+    this->frySound.setBuffer(this->frySoundBuffer);
+    this->frySound.setVolume(50);
+    this->frySound.setID(0);
+
+    if (!this->fryLoopSoundBuffer.loadFromFile("src/audio/FryingLoop.wav")) {
+        std::cout << "Cannot load frying loop audio" << std::endl;
+    }
+    this->fryLoopSound.setBuffer(this->fryLoopSoundBuffer);
+    this->fryLoopSound.setVolume(10);
+    this->fryLoopSound.setLoop(true);
+    this->fryLoopSound.setID(1);
+
+    if (!this->inGameMusic.openFromFile("src/audio/Main Theme.wav")) {
+        std::cout << "Cannot load main theme music" << std::endl;
+    }
+    this->inGameMusic.setVolume(50);
+    this->inGameMusic.setLoop(true);
 }
 
 void Game::initWindow() {
@@ -37,13 +62,13 @@ void Game::initWindow() {
 
 void Game::initPlayer() {
     this->player = Player();
-    this->player.setLocation(500.f, 500.f);
 }
 
 void Game::loadLevel(int levelNum) {
     if (!this->levelObjects->empty()) {
         this->levelObjects->clear();
     }
+    this->finishTimer = 0;
 
     std::ifstream levelDataFile("src/levelData/level_" + std::to_string(levelNum) + ".data");
     std::string lineText;
@@ -58,6 +83,12 @@ void Game::loadLevel(int levelNum) {
     
     getline(levelDataFile, lineText);
     this->objCount = std::stoi(lineText);
+
+    getline(levelDataFile, lineText);
+    int x = std::stoi(lineText);
+
+    getline(levelDataFile, lineText);
+    this->player.setLocation(x, std::stoi(lineText));
 
     getline(levelDataFile, lineText); // Skipping header
 
@@ -79,6 +110,8 @@ void Game::loadLevel(int levelNum) {
     int moveType;
     float moveOffset;
     bool finisher;
+    float boxScale;
+    float scale;
 
     int lineCounter = 0; // out of 14
     std::string segment = "";
@@ -124,7 +157,7 @@ void Game::loadLevel(int levelNum) {
                             rotation = std::stof(segment);
                             break;
                         case 9:
-                            rotation = std::stoi(segment);
+                            animationCycle = std::stoi(segment);
                             break;
                         case 10:
                             if (segment.compare("true") == 0) {
@@ -160,6 +193,12 @@ void Game::loadLevel(int levelNum) {
                                 finisher = false;
                             }
                             break;
+                        case 16:
+                            boxScale = std::stof(segment);
+                            break;
+                        case 17:
+                            scale = std::stof(segment);
+                            break;
                     }
                     segment = "";
                     lineCounter++;
@@ -167,7 +206,7 @@ void Game::loadLevel(int levelNum) {
                     segment += ch;
                 }
             }
-            this->levelObjects->push_back(gameObject(textureFile, active, xPos, yPos, *hitBox, rotation, animationCycle, sharp, textured, moving, moveType, moveOffset, finisher));
+            this->levelObjects->push_back(gameObject(textureFile, active, xPos, yPos, *hitBox, rotation, animationCycle, sharp, textured, moving, moveType, moveOffset, finisher, boxScale, scale));
         }
     }
 
@@ -192,10 +231,10 @@ void Game::loadLevel(int levelNum) {
 
     // Create bounding boxes
     std::string thing = "";
-    this->levelObjects->push_back(gameObject(thing, false, -50, -50, sf::FloatRect(0, 0, 50, this->levelRect->height + 100), 0, 0, false, false, false, 0, 0, false));
-    this->levelObjects->push_back(gameObject(thing, false, 0, -50, sf::FloatRect(0, 0, this->levelRect->width, 50), 0, 0, false, false, false, 0, 0, false));
-    this->levelObjects->push_back(gameObject(thing, false, this->levelRect->width, -50, sf::FloatRect(0, 0, 50, this->levelRect->height + 100), 0, 0, false, false, false, 0, 0, false));
-    this->levelObjects->push_back(gameObject(thing, false, 0, this->levelRect->height, sf::FloatRect(0, 0, this->levelRect->width, 50), 0, 0, false, false, false, 0, 0, false));
+    this->levelObjects->push_back(gameObject(thing, false, -50, -50, sf::FloatRect(0, 0, 50, this->levelRect->height + 100), 0, 0, false, false, false, 0, 0, false, 1, 1));
+    this->levelObjects->push_back(gameObject(thing, false, 0, -50, sf::FloatRect(0, 0, this->levelRect->width, 50), 0, 0, false, false, false, 0, 0, false, 1, 1));
+    this->levelObjects->push_back(gameObject(thing, false, this->levelRect->width, -50, sf::FloatRect(0, 0, 50, this->levelRect->height + 100), 0, 0, false, false, false, 0, 0, false, 1, 1));
+    this->levelObjects->push_back(gameObject(thing, false, 0, this->levelRect->height, sf::FloatRect(0, 0, this->levelRect->width, 50), 0, 0, false, false, false, 0, 0, false, 1, 1));
     
     // Load Tileset
     if (!this->map.load("src/Images/main tiles practice.png", sf::Vector2u(64, 64), levelOld, (width/64)/scaleFactor, (height/64)/scaleFactor, 2)) {
@@ -230,6 +269,7 @@ void Game::pollEvent() {
                 this->pauseSprite.setPosition(this->windowView->getCenter().x, this->windowView->getCenter().y);
                 this->pauseSprite.setScale(this->xScreenRatio, this->yScreenRatio);
                 this->currentState = paused;
+                this->stateSwitch(2);
                 this->pMenu.restart();
             }
         } else if (event.type == sf::Event::Resized) {
@@ -264,6 +304,7 @@ void Game::pollEvent() {
                     this->pauseSprite.setPosition(this->windowView->getCenter().x, this->windowView->getCenter().y);
                     this->pauseSprite.setScale(this->xScreenRatio, this->yScreenRatio);
                     this->currentState = paused;
+                    this->stateSwitch(2);
                     this->pMenu.restart();
                 }
             } else if (this->event.type == sf::Event::KeyReleased) {
@@ -301,17 +342,29 @@ void Game::pollEvent() {
                     this->pMenu.escape();
                 }
             }
+        } else if (this->currentState == won) {
+            if (event.type == sf::Event::KeyPressed) {
+                if (this->event.key.code == sf::Keyboard::W) {
+                    this->fMenu.moveUp();
+                } else if (this->event.key.code == sf::Keyboard::S) {
+                    this->fMenu.moveDown();
+                } else if (this->event.key.code == sf::Keyboard::Enter) {
+                    this->fMenu.select();
+                }
+            }
         }
     }
 }
 
 void Game::update() {
     this->pollEvent();
-    if (this->currentState == inGame) {
+    if (this->currentState == inGame || this->currentState == won) {
         //Tick movements
         this->elapsed = this->clock.getElapsedTime();
         this->timeChangeMilli = (elapsed.asMilliseconds() - oldTime.asMilliseconds())/1000.f;
-        this->player.calcMovement(timeChangeMilli);
+        if (this->currentState == inGame) {
+            this->player.calcMovement(timeChangeMilli);
+        }
         for (int i=0; i<this->objCount; i++) {
             this->levelObjects->at(i).calcMovement(this->elapsed.asSeconds());
         }
@@ -320,6 +373,11 @@ void Game::update() {
         float frameDifference = this->elapsed.asMilliseconds() - this->frameCounter.asMilliseconds();
         if (frameDifference > 70) {
             this->player.updateTexture();
+            for (int i=0; i<this->objCount; i++) {
+                if (this->levelObjects->at(i).active) {
+                    this->levelObjects->at(i).updateTexture();
+                }
+            }
             this->frameCounter = this->elapsed;
             // Also update other sprites
         }
@@ -341,7 +399,12 @@ void Game::update() {
                         }
                     }
                 } else if (this->levelObjects->at(i).finisher) {
-                    this->levelWon = true;
+                    this->levelObjects->at(i).landing = true;
+                    if (this->currentState != won) {
+                        this->currentState = won;
+                        this->stateSwitch(0);
+                        this->finishTimer = this->clock.getElapsedTime().asMilliseconds();
+                    }
                 } else {
                     // From perspective of player, take minimum of overlaps 
                     float overlapL = tempObjBox.left + tempObjBox.width - tempPlayerBox.left;
@@ -409,27 +472,68 @@ void Game::update() {
             this->windowView->setCenter(this->windowView->getCenter().x,this->levelRect->height - this->windowView->getSize().y/2);
         }
         this->window->setView(*this->windowView);
-
-        if (this->levelWon) {
-            this->windowView->setCenter(this->windowView->getSize().x/2, this->windowView->getSize().y/2);
-            this->window->setView(*this->windowView);
-            this->currentState = inMenu;
-            this->levelWon = false;
+        
+        float timeDiff = this->clock.getElapsedTime().asMilliseconds() - this->finishTimer;
+        if (this->currentState == won) {
+            if (timeDiff >= 1000) {
+                int ret = this->fMenu.update(this->windowView->getCenter(), this->windowView->getSize().y);
+                if (ret == 1) {
+                    this->currentState = inGame;
+                    this->stateSwitch(0);
+                    this->loadLevel(1);
+                    this->restartLevel();
+                } else if (ret == 2) {
+                    this->windowView->setCenter(this->windowView->getSize().x/2, this->windowView->getSize().y/2);
+                    this->window->setView(*this->windowView);
+                    this->currentState = inMenu;
+                    this->stateSwitch(0);
+            }
         }
+        }
+
     } else if (this->currentState == inMenu) {
-        if (menu.update()) {
+        if (this->menu.update()) {
             this->currentState = inGame;
+            this->stateSwitch(0);
             this->initPlayer();
             this->loadObjects();
         }
     } else if (this->currentState == paused) {
-        int ret = pMenu.update(this->windowView->getCenter(), this->windowView->getSize().y);
+        int ret = this->pMenu.update(this->windowView->getCenter(), this->windowView->getSize().y);
         if (ret == 1) {
             this->currentState = inGame;
+            this->stateSwitch(1);
         } else if (ret == 2) {
             this->windowView->setCenter(this->windowView->getSize().x/2, this->windowView->getSize().y/2);
             this->window->setView(*this->windowView);
             this->currentState = inMenu;
+            this->stateSwitch(0);
+        }
+    }
+    if (this->soundList.size() > 0) {
+        this->updateSounds();
+    }
+}
+
+void Game::updateSounds() {
+    int i=-1;
+    int removeSize = this->soundList.size();
+    int removeList[removeSize];
+    for (Sound2 *sound : this->soundList) {
+        i++;
+        if (sound->getStatus() == sf::SoundSource::Status::Stopped) {
+            if (sound->getID() == 0) {
+                if (this->currentState == won) {
+                    this->fryLoopSound.play();
+                    this->soundList.push_back(&this->fryLoopSound);
+                }
+            }
+            removeList[i] = 1;
+        }
+    }
+    for (int y=removeSize-1; y>=0; y--) {
+        if (removeList[y] == 1) {
+            this->soundList.erase(this->soundList.begin() + y);
         }
     }
 }
@@ -448,12 +552,63 @@ void Game::render() {
     } else if (this->currentState == paused) {
         this->window->draw(this->pauseSprite);
         this->pMenu.draw(this->window);
+    } else if (this->currentState == won) {
+        if (!(this->finishSwitch)) {
+            for (int i=0; i<this->objCount; i++) {
+                if (this->levelObjects->at(i).finisher) {
+                    this->levelObjects->at(i).updateTexture();
+                }
+            }
+            this->finishSwitch = true;
+            this->window->draw(this->player.getSprite());
+        }
+        this->window->draw(this->map);
+        for (int i=0; i<this->objCount; i++) {
+            this->window->draw(this->levelObjects->at(i).getSprite());
+        }
+        this->fMenu.draw(this->window);
     }
 
     this->window->display();
 }
 
+void Game::stateSwitch(int switchType) {
+    if (switchType == 0) { // Full screen switch
+        if (this->soundList.size() > 0) {
+            for (Sound2 *sound : this->soundList) {
+                sound->stop();
+            }
+        }
+        if (this->currentState == inMenu) {
+            this->inGameMusic.stop();
+            // play menu music
+        } else if (this->currentState == inGame) {
+            this->inGameMusic.play();
+        } else if (this->currentState == won) {
+            this->frySound.play();
+            this->soundList.push_back(&this->frySound);
+        }
+    } else if (switchType == 1) { // Resuming from pause
+        //this->pauseMusic.stop();
+        if (this->soundList.size() > 0) {
+            for (Sound2 *sound : this->soundList) {
+                sound->play();
+            }
+        }
+        this->inGameMusic.play();
+    } else if (switchType == 2) { // Starting pause
+        if (this->soundList.size() > 0) {
+            for (Sound2 *sound : this->soundList) {
+                sound->pause();
+            }
+        }
+        this->inGameMusic.pause();
+        //this->pauseMusic.play();
+    }
+}
+
 void Game::restartLevel() {
     this->player.reset();
-    this->player.setLocation(100, 100);
+    this->player.setLocation(7000, 200);
+    this->finishTimer = -1;
 }

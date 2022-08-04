@@ -7,6 +7,9 @@
 #include "tileMap.h"
 #include "Menu.h"
 #include "pauseMenu.h"
+#include "finishMenu.h"
+#include <SFML/Audio.hpp>
+#include "Sound2.h"
 
 class Game {
     private:
@@ -16,17 +19,16 @@ class Game {
         sf::View* windowView;
         sf::FloatRect* levelRect;
         sf::Event event;
-        //bool paused;
         Player player;
         bool levelInit;
         float xScreenRatio;
         float yScreenRatio;
         tileMap map;
-        bool levelWon;
         enum gameState { inMenu, inGame, won, paused };
         gameState currentState;
         Menu menu;
         pauseMenu pMenu;
+        finishMenu fMenu;
 
         // Textures
         sf::Texture eggTexture;
@@ -51,10 +53,23 @@ class Game {
         sf::Time frameCounter;
         float timeChangeMilli;
 
+        // Sounds
+        sf::SoundBuffer frySoundBuffer;
+        sf::SoundBuffer fryLoopSoundBuffer;
+        Sound2 frySound;
+        Sound2 fryLoopSound;
+        sf::Music inGameMusic;
+        std::vector<Sound2*> soundList;
+        
+        float finishTimer;
+        bool finishSwitch;
+
         void initVariables();
         void initWindow();
         void restartLevel();
         void loadLevel(int levelNum);
+        void stateSwitch(int switchType);
+        void updateSounds();
     
     public:
         Game();

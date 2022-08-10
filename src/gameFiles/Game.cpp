@@ -47,8 +47,27 @@ void Game::initVariables() {
     if (!this->inGameMusic.openFromFile("src/audio/Main Theme.wav")) {
         std::cout << "Cannot load main theme music" << std::endl;
     }
-    this->inGameMusic.setVolume(50);
+    this->inGameMusic.setVolume(30);
     this->inGameMusic.setLoop(true);
+
+    if (!this->jumpSoundBuffer.loadFromFile("src/audio/Jump.wav")) {
+        std::cout << "Cannot load jump audio" << std::endl;
+    }
+    this->jumpSound.setBuffer(this->jumpSoundBuffer);
+    this->jumpSound.setVolume(80);
+    this->jumpSound.setID(2);
+
+    if (!this->dashSoundBuffer.loadFromFile("src/audio/Dash.wav")) {
+        std::cout << "Cannot load dash audio" << std::endl;
+    }
+    this->dashSound.setBuffer(this->dashSoundBuffer);
+    this->dashSound.setVolume(50);
+    this->dashSound.setID(3);
+
+    // Shaders
+    if (!sf::Shader::isAvailable()) {
+        std::cout << "Shaders not available" << std::endl;
+    }
 }
 
 void Game::initWindow() {
@@ -487,8 +506,18 @@ void Game::update() {
                     this->window->setView(*this->windowView);
                     this->currentState = inMenu;
                     this->stateSwitch(0);
+                }
             }
         }
+
+        // jumping sounds
+        int status = this->player.status();
+        if (status == 1) {
+            this->jumpSound.play();
+            this->soundList.push_back(&this->jumpSound);
+        } else if (status == 2) {
+            this->dashSound.play();
+            this->soundList.push_back(&this->dashSound);
         }
 
     } else if (this->currentState == inMenu) {
@@ -566,7 +595,10 @@ void Game::render() {
         for (int i=0; i<this->objCount; i++) {
             this->window->draw(this->levelObjects->at(i).getSprite());
         }
-        this->fMenu.draw(this->window);
+        float timeDiff = this->clock.getElapsedTime().asMilliseconds() - this->finishTimer;
+        if (timeDiff >= 1000) {
+            this->fMenu.draw(this->window);
+        }
     }
 
     this->window->display();

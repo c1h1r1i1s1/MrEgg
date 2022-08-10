@@ -104,49 +104,58 @@ void Player::calcMovement(float timeChangeMilli) {
                     if (this->movingLeft && this->movingRight) {
                         if (!this->doubleJumpUsed) {
                             this->ySpeed = std::min(this->jumpSpeed, this->ySpeed);
+                            this->currentMove = jumped;
                             this->doubleJumpUsed = true;
                         }
                     } else if (this->movingLeft && this->movingUp) {
                         if (!this->doubleJumpUsed) {
                             this->ySpeed = std::min(this->jumpSpeed, this->ySpeed);
+                            this->currentMove = jumped;
                             this->doubleJumpUsed = true;
                         }
                     } else if (this->movingRight && this->movingUp) {
                         if (!this->doubleJumpUsed) {
                             this->ySpeed = std::min(this->jumpSpeed, this->ySpeed);
+                            this->currentMove = jumped;
                             this->doubleJumpUsed = true;
                         }
                     } else if (this->movingRight) {
                         this->xSpeed = std::max(this->boostSpeed, this->xSpeed);
+                        this->currentMove = dashed;
                         this->boostTick = 0;
                         this->ySpeed = 0;
                         this->boostUsed = true;
                     } else if (this->movingLeft) {
                         this->xSpeed = std::min(-1 * this->boostSpeed, this->xSpeed);
+                        this->currentMove = dashed;
                         this->boostTick = 0;
                         this->boostUsed = true;
                         this->ySpeed = 0;
                     } else {
                         if (!this->doubleJumpUsed) {
                             this->ySpeed = std::min(this->jumpSpeed, this->ySpeed);
+                            this->currentMove = jumped;
                             this->doubleJumpUsed = true;
                         }
                     }
                 } else {
                     if (!this->doubleJumpUsed) {
                         this->ySpeed = std::min(this->jumpSpeed, this->ySpeed);
+                        this->currentMove = jumped;
                         this->doubleJumpUsed = true;
                     }
                 }
             } else {
                 if (!this->doubleJumpUsed) {
                     this->ySpeed = std::min(this->jumpSpeed, this->ySpeed);
+                    this->currentMove = jumped;
                     this->doubleJumpUsed = true;
                 }
             }
         } else {
             this->inAir = true;
             this->ySpeed = this->jumpSpeed;
+            this->currentMove = jumped;
         }
     }
 
@@ -341,6 +350,12 @@ void Player::reset() {
     this->movingLeft = false;
     this->movingRight = false;
     this->movingUp = false;
+}
+
+int Player::status() { // must be done before calc movement
+    int move = this->currentMove;
+    this->currentMove = nothing;
+    return move;
 }
 
 HitBoxSprite Player::getSprite() {

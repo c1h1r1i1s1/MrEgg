@@ -56,9 +56,13 @@ class Game {
         // Sounds
         sf::SoundBuffer frySoundBuffer;
         sf::SoundBuffer fryLoopSoundBuffer;
+        sf::SoundBuffer jumpSoundBuffer;
+        sf::SoundBuffer dashSoundBuffer;
         Sound2 frySound;
         Sound2 fryLoopSound;
         sf::Music inGameMusic;
+        Sound2 jumpSound;
+        Sound2 dashSound;
         std::vector<Sound2*> soundList;
         
         float finishTimer;

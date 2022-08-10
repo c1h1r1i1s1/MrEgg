@@ -26,6 +26,8 @@ class Player {
         int health;
         float invincibleTimer;
         bool textureSwitch;
+        enum moveStatus { nothing, jumped, dashed };
+        moveStatus currentMove;
     
     public:
         bool movingRight;
@@ -56,4 +58,5 @@ class Player {
         void affectGravity(float timeChangeMilli);
         bool damage(int damageAmount);
         void reset();
+        int status();
 };
